@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+  <title>Stauseepokal - Aktiviere dein Konto</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <link rel="shortcut icon" th:href="@{|${mailData.serverUrl}/favicon.ico|}" />
+</head>
+<body>
+<p th:text="#{'Hi ' + ${mailData.firstName}} + ','">Hi,</p>
+<p>Dein Konto für den Stauseepokal wurde erstellt, bitte klicke auf den folgenden Link, um es zu aktivieren:</p>
+<p>
+  <a th:with="url=(@{|${mailData.serverUrl}/users/activate?key=${mailData.key}|})" th:href="${url}"
+     th:text="${url}">Jetzt aktivieren</a>
+</p>
+<p>
+  <span>Sportliche Grüße</span>
+  <br/>
+  <em>Dein ATV Stauseepokal Team</em>
+</p>
+</body>
+</html>
