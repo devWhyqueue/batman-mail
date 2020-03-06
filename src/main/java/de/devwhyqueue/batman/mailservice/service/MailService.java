@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
@@ -20,7 +19,7 @@ public class MailService {
 
   private final Logger log = LoggerFactory.getLogger(MailService.class);
 
-  @Value("spring.mail.username")
+  @Value("${spring.mail.username}")
   private String from;
 
   private final JavaMailSender javaMailSender;
@@ -31,8 +30,20 @@ public class MailService {
     this.templateEngine = templateEngine;
   }
 
-  @Async
-  public void sendEmail(String to, String subject, String content, boolean isMultipart,
+  public void sendActivationEmail(MailData mailData) throws MessagingException, MailException {
+    log.debug("Sending activation email to '{}'", mailData.getEmail());
+    sendEmailFromTemplate(mailData, "activationMail", "Stauseepokal - Aktiviere dein Konto");
+  }
+
+  private void sendEmailFromTemplate(MailData mailData, String templateName, String subject)
+      throws MessagingException, MailException {
+    Context context = new Context();
+    context.setVariable("mailData", mailData);
+    String content = templateEngine.process(templateName, context);
+    sendEmail(mailData.getEmail(), subject, content, false, true);
+  }
+
+  private void sendEmail(String to, String subject, String content, boolean isMultipart,
       boolean isHtml) throws MessagingException, MailException {
     log.debug("Send email[multipart '{}' and html '{}'] to '{}' with subject '{}' and content={}",
         isMultipart, isHtml, to, subject, content);
@@ -47,21 +58,5 @@ public class MailService {
     message.setText(content, isHtml);
     javaMailSender.send(mimeMessage);
     log.debug("Sent email to User '{}'", to);
-
-  }
-
-  @Async
-  public void sendEmailFromTemplate(MailData mailData, String templateName, String subject)
-      throws MessagingException, MailException {
-    Context context = new Context();
-    context.setVariable("mailData", mailData);
-    String content = templateEngine.process(templateName, context);
-    sendEmail(mailData.getEmail(), subject, content, false, true);
-  }
-
-  @Async
-  public void sendActivationEmail(MailData mailData) throws MessagingException, MailException {
-    log.debug("Sending activation email to '{}'", mailData.getEmail());
-    sendEmailFromTemplate(mailData, "activationMail", "Stauseepokal - Aktiviere dein Konto");
   }
 }
