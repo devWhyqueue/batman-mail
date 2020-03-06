@@ -30,33 +30,39 @@ public class MailService {
     this.templateEngine = templateEngine;
   }
 
-  public void sendActivationEmail(MailData mailData) throws MessagingException, MailException {
+  public void sendActivationEmail(MailData mailData) throws de.devwhyqueue.batman.mailservice.service.exception.MailException {
     log.debug("Sending activation email to '{}'", mailData.getEmail());
     sendEmailFromTemplate(mailData, "activationMail", "Stauseepokal - Aktiviere dein Konto");
   }
 
   private void sendEmailFromTemplate(MailData mailData, String templateName, String subject)
-      throws MessagingException, MailException {
-    Context context = new Context();
-    context.setVariable("mailData", mailData);
-    String content = templateEngine.process(templateName, context);
-    sendEmail(mailData.getEmail(), subject, content, false, true);
+      throws de.devwhyqueue.batman.mailservice.service.exception.MailException {
+      Context context = new Context();
+      context.setVariable("mailData", mailData);
+      String content = templateEngine.process(templateName, context);
+      sendEmail(mailData.getEmail(), subject, content, false, true);
+
   }
 
   private void sendEmail(String to, String subject, String content, boolean isMultipart,
-      boolean isHtml) throws MessagingException, MailException {
+      boolean isHtml) throws de.devwhyqueue.batman.mailservice.service.exception.MailException {
     log.debug("Send email[multipart '{}' and html '{}'] to '{}' with subject '{}' and content={}",
         isMultipart, isHtml, to, subject, content);
 
-    // Prepare message using a Spring helper
-    MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-    MimeMessageHelper message = new MimeMessageHelper(mimeMessage, isMultipart,
-        StandardCharsets.UTF_8.name());
-    message.setTo(to);
-    message.setFrom(from);
-    message.setSubject(subject);
-    message.setText(content, isHtml);
-    javaMailSender.send(mimeMessage);
-    log.debug("Sent email to User '{}'", to);
+    try {
+      // Prepare message using a Spring helper
+      MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+      MimeMessageHelper message = new MimeMessageHelper(mimeMessage, isMultipart,
+          StandardCharsets.UTF_8.name());
+      message.setTo(to);
+      message.setFrom(from);
+      message.setSubject(subject);
+      message.setText(content, isHtml);
+      javaMailSender.send(mimeMessage);
+      log.debug("Sent email to User '{}'", to);
+    }catch (MessagingException | MailException e) {
+      log.error("Could not send mail! Message was: {}", e.getMessage());
+      throw new de.devwhyqueue.batman.mailservice.service.exception.MailException();
+    }
   }
 }
